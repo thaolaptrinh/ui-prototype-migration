@@ -1,0 +1,23 @@
+{
+  "name": "ui-prototype-migration",
+  "description": "Migrate an existing, already-designed HTML/CSS UI prototype into a component-based frontend (Vue 3 first) while preserving its exact rendered output and behavior — not a UI design generator. Co-locate scoped component CSS, carry design tokens and inline styles verbatim, and verify parity per view/theme/viewport via Playwright computed-style + pixel diff and axe-core accessibility. Includes /migrate-prototype and /verify-parity commands.",
+  "version": "1.0.0",
+  "author": {
+    "name": "thaolaptrinh",
+    "url": "https://github.com/thaolaptrinh"
+  },
+  "homepage": "https://github.com/thaolaptrinh/ui-prototype-migration",
+  "repository": "https://github.com/thaolaptrinh/ui-prototype-migration",
+  "license": "MIT",
+  "keywords": [
+    "migration",
+    "vue",
+    "prototype",
+    "html-css",
+    "visual-regression",
+    "playwright",
+    "component",
+    "fidelity",
+    "agent-skill"
+  ]
+}

@@ -1,0 +1,11 @@
+node_modules/
+compare-report/
+*.log
+
+# scratch / generated
+_host-*/
+_preview-*/
+
+# OS junk
+.DS_Store
+Thumbs.db

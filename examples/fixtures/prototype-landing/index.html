@@ -1,0 +1,517 @@
+<!doctype html>
+<!-- =====================================================================
+  Pulse Fitness — single-file prototype (LANDING PAGE / consumer style)
+
+  Second fixture for ui-prototype-migration: a different product type than
+  the admin dashboard — spacious, vibrant, block-based marketing page
+  (ui-ux-pro-max: "Vibrant & Block-based", Barlow Condensed/Barlow,
+  navy #1E3A5F + gold accent, scroll storytelling).
+
+  Same hard cases, different shape:
+    - embedded <style> + <script>; inline style="" (accents, carousel, progress)
+    - non-round tokens, light + dark, 3 breakpoints
+    - reuse: feature cards ×6, pricing cards ×3, testimonial cards, faq items
+    - interactions: theme toggle, mobile nav, pricing toggle, FAQ accordion,
+      testimonial carousel, scroll progress bar, toast CTA
+  ====================================================================== -->
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pulse — Train harder, smarter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ---------- tokens (non-round kept) ---------- */
+    :root{
+      --bg:#F8FAFC; --surface:#FFFFFF; --surface-2:#F1F5F9;
+      --border:#CBD5E1; --text:#0F172A; --text-2:#475569; --muted:#64748B;
+      --navy:#1E3A5F; --navy-press:#152C49; --blue:#2563EB; --gold:#A16207; --gold-soft:#FEF3C7;
+      --good:#16A34A; --danger:#DC2626;
+      --display:'Barlow Condensed',Impact,'Arial Narrow',sans-serif;
+      --font:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;
+      --fs1:12px; --fs2:14px; --fs3:16px; --fs4:18px; --fs5:22px; --fs6:30px; --fs7:42px; --fs8:56px;
+      --s1:4px; --s2:6px; --s3:8px; --s4:10px; --s5:14px; --s6:18px; --s7:26px; --s8:42px; --s9:64px;
+      --r1:6px; --r2:10px; --r3:14px; --r4:20px;
+      --shadow:0 10px 30px rgba(15,23,42,.10);
+      --shadow-lg:0 20px 60px rgba(15,23,42,.16);
+      --header-h:64px;
+      color-scheme:light;
+    }
+    [data-theme="dark"]{
+      --bg:#0B1220; --surface:#101828; --surface-2:#1A2332;
+      --border:#273449; --text:#F1F5F9; --text-2:#B6C2D4; --muted:#7C8AA5;
+      --navy:#3B82F6; --navy-press:#60A5FA; --blue:#60A5FA; --gold:#F59E0B; --gold-soft:#3D2A08;
+      --shadow:0 10px 30px rgba(0,0,0,.45);
+      --shadow-lg:0 20px 60px rgba(0,0,0,.6);
+      color-scheme:dark;
+    }
+    /* ---------- base ---------- */
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;scroll-behavior:smooth;}
+    body{font-family:var(--font);font-size:var(--fs3);line-height:1.6;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;}
+    h1,h2,h3,p{margin:0;}
+    a{color:inherit;text-decoration:none;}
+    button{font:inherit;cursor:pointer;}
+    .wrap{max-width:1120px;margin:0 auto;padding:0 var(--s7);}
+    .sec{padding:var(--s9) 0;}
+    .sec__label{font-family:var(--display);text-transform:uppercase;letter-spacing:.14em;color:var(--gold);font-weight:600;font-size:var(--fs2);margin-bottom:var(--s3);}
+    .sec__title{font-family:var(--display);font-size:var(--fs7);font-weight:700;letter-spacing:-.01em;line-height:1.05;text-transform:uppercase;margin-bottom:var(--s5);}
+    .sec__sub{color:var(--text-2);font-size:var(--fs4);max-width:640px;}
+    .center{text-align:center;}
+    .center .sec__sub{margin-left:auto;margin-right:auto;}
+    [hidden]{display:none !important;}
+    :focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:var(--r1);}
+    ::selection{background:var(--gold-soft);}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;}
+
+    /* ---------- scroll progress ---------- */
+    .progress{position:fixed;top:0;left:0;right:0;height:3px;background:transparent;z-index:60;}
+    .progress__bar{height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--blue));}
+
+    /* ---------- header ---------- */
+    .header{position:sticky;top:0;z-index:50;background:var(--surface);border-bottom:1px solid var(--border);}
+    .header__in{height:var(--header-h);display:flex;align-items:center;gap:var(--s6);}
+    .logo{display:flex;align-items:center;gap:var(--s3);font-family:var(--display);font-weight:700;font-size:var(--fs5);text-transform:uppercase;letter-spacing:.04em;}
+    .logo__mark{width:30px;height:30px;border-radius:var(--r1);background:linear-gradient(135deg,var(--navy),var(--blue));display:grid;place-items:center;color:#fff;font-family:var(--font);font-weight:700;font-size:var(--fs3);}
+    .nav{display:flex;gap:var(--s2);margin-left:auto;}
+    .nav a{padding:var(--s3) var(--s5);border-radius:var(--r1);color:var(--text-2);font-weight:500;transition:background .15s,color .15s;}
+    .nav a:hover{background:var(--surface-2);color:var(--text);}
+    .iconbtn{width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r1);color:var(--text-2);border:0;background:none;}
+    .iconbtn:hover{background:var(--surface-2);color:var(--text);}
+    .iconbtn svg{width:19px;height:19px;}
+    #menuToggle{display:none;}
+
+    /* ---------- buttons ---------- */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--s2);height:44px;padding:0 var(--s7);border-radius:var(--r2);border:1px solid transparent;font-weight:600;font-size:var(--fs3);transition:background .15s,border-color .15s,color .15s,transform .15s;}
+    .btn:active{transform:translateY(1px);}
+    .btn--primary{background:var(--navy);color:#fff;}
+    .btn--primary:hover{background:var(--navy-press);}
+    .btn--gold{background:var(--gold);color:#fff;}
+    .btn--gold:hover{filter:brightness(.92);}
+    .btn--ghost{background:var(--surface);border-color:var(--border);color:var(--text);}
+    .btn--ghost:hover{background:var(--surface-2);}
+    .btn--lg{height:52px;padding:0 var(--s8);font-size:var(--fs4);}
+    .btn--sm{height:36px;padding:0 var(--s5);font-size:var(--fs2);}
+
+    /* ---------- hero ---------- */
+    .hero{padding:var(--s8) 0 var(--s9);position:relative;overflow:hidden;}
+    .hero__grid{display:grid;grid-template-columns:1.1fr .9fr;gap:var(--s8);align-items:center;}
+    .hero__title{font-family:var(--display);font-size:var(--fs8);font-weight:700;line-height:.98;text-transform:uppercase;letter-spacing:-.01em;margin:var(--s3) 0 var(--s5);}
+    .hero__title em{font-style:normal;color:var(--gold);}
+    .hero__sub{color:var(--text-2);font-size:var(--fs4);max-width:480px;margin-bottom:var(--s7);}
+    .hero__cta{display:flex;gap:var(--s4);flex-wrap:wrap;margin-bottom:var(--s8);}
+    .stats{display:flex;gap:var(--s8);flex-wrap:wrap;}
+    .stat__num{font-family:var(--display);font-size:var(--fs6);font-weight:700;color:var(--navy);line-height:1;}
+    [data-theme="dark"] .stat__num{color:var(--blue);}
+    .stat__label{font-size:var(--fs2);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+    .hero__visual{position:relative;}
+    .phone{background:var(--surface);border:1px solid var(--border);border-radius:var(--r4);box-shadow:var(--shadow-lg);padding:var(--s6);max-width:340px;margin-left:auto;}
+    .phone__bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s5);}
+    .phone__ring{display:flex;align-items:center;gap:var(--s3);padding:var(--s4);background:var(--surface-2);border-radius:var(--r2);margin-bottom:var(--s3);}
+    .phone__ring .dot{width:9px;height:9px;border-radius:50%;}
+    .phone__big{font-family:var(--display);font-size:var(--fs6);font-weight:700;line-height:1;margin-bottom:var(--s2);}
+    .phone__sm{color:var(--muted);font-size:var(--fs2);}
+    .chip{display:inline-flex;align-items:center;gap:var(--s2);background:var(--gold-soft);color:var(--gold);font-weight:600;font-size:var(--fs2);padding:var(--s2) var(--s4);border-radius:999px;}
+
+    /* ---------- logos strip ---------- */
+    .logos{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:var(--s6) 0;}
+    .logos__row{display:flex;justify-content:space-between;gap:var(--s6);align-items:center;flex-wrap:wrap;color:var(--muted);font-family:var(--display);font-weight:600;font-size:var(--fs4);text-transform:uppercase;letter-spacing:.1em;}
+
+    /* ---------- features ---------- */
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s6);}
+    .feature{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);padding:var(--s7);transition:transform .15s,box-shadow .15s,border-color .15s;}
+    .feature:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:var(--gold);}
+    .feature__ico{width:46px;height:46px;border-radius:var(--r2);display:grid;place-items:center;margin-bottom:var(--s5);color:#fff;font-family:var(--display);font-weight:700;font-size:var(--fs5);}
+    .feature__title{font-family:var(--display);font-size:var(--fs5);font-weight:700;text-transform:uppercase;letter-spacing:.02em;margin-bottom:var(--s2);}
+    .feature__text{color:var(--text-2);font-size:var(--fs3);}
+
+    /* ---------- pricing ---------- */
+    .toggle{display:inline-flex;background:var(--surface-2);border-radius:999px;padding:3px;margin:var(--s5) auto var(--s8);}
+    .toggle button{padding:var(--s3) var(--s6);border-radius:999px;border:0;background:none;font-weight:600;color:var(--text-2);}
+    .toggle button.is-active{background:var(--surface);color:var(--text);box-shadow:var(--shadow);}
+    .price-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);padding:var(--s7);display:flex;flex-direction:column;gap:var(--s5);position:relative;}
+    .price-card--popular{border-color:var(--navy);box-shadow:var(--shadow-lg);}
+    .price-card__flag{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;font-size:var(--fs1);font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:3px var(--s4);border-radius:999px;}
+    .price-card__name{font-family:var(--display);font-size:var(--fs5);font-weight:700;text-transform:uppercase;}
+    .price-card__price{font-family:var(--display);font-size:var(--fs6);font-weight:700;line-height:1;}
+    .price-card__price span{font-size:var(--fs4);color:var(--muted);font-family:var(--font);font-weight:500;}
+    .price-card__list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:var(--s3);color:var(--text-2);font-size:var(--fs3);flex:1;}
+    .price-card__list li{display:flex;align-items:center;gap:var(--s3);}
+    .price-card__list svg{width:16px;height:16px;color:var(--good);flex-shrink:0;}
+
+    /* ---------- testimonials ---------- */
+    .carousel{position:relative;overflow:hidden;}
+    .carousel__track{display:flex;transition:transform .3s ease;}
+    .tcard{flex:0 0 100%;padding:0 var(--s3);}
+    .tcard__in{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);padding:var(--s7);text-align:center;}
+    .tcard__quote{font-size:var(--fs4);color:var(--text-2);font-style:italic;margin:var(--s5) 0;}
+    .tcard__who{font-weight:700;}
+    .tcard__role{color:var(--muted);font-size:var(--fs2);}
+    .stars{color:var(--gold);letter-spacing:.1em;}
+    .carousel__nav{display:flex;justify-content:center;gap:var(--s3);margin-top:var(--s6);align-items:center;}
+    .carousel__dot{width:9px;height:9px;border-radius:50%;background:var(--border);border:0;padding:0;}
+    .carousel__dot.is-active{background:var(--navy);width:22px;border-radius:999px;}
+    .carousel__arrow{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);display:inline-flex;align-items:center;justify-content:center;}
+    .carousel__arrow:hover{background:var(--surface-2);}
+
+    /* ---------- FAQ ---------- */
+    .faq{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:var(--s4);}
+    .faq__item{border:1px solid var(--border);border-radius:var(--r2);background:var(--surface);overflow:hidden;}
+    .faq__q{width:100%;display:flex;align-items:center;justify-content:space-between;gap:var(--s4);padding:var(--s5) var(--s6);border:0;background:none;text-align:left;font-weight:600;font-size:var(--fs4);color:var(--text);}
+    .faq__q:hover{color:var(--navy);}
+    .faq__ico{transition:transform .2s;color:var(--muted);}
+    .faq__item.is-open .faq__ico{transform:rotate(45deg);color:var(--navy);}
+    .faq__a{display:none;padding:0 var(--s6) var(--s5);color:var(--text-2);}
+    .faq__item.is-open .faq__a{display:block;}
+
+    /* ---------- CTA band ---------- */
+    .cta{background:linear-gradient(135deg,var(--navy),var(--blue));border-radius:var(--r4);padding:var(--s8);text-align:center;color:#fff;}
+    .cta .sec__title{color:#fff;}
+    .cta .sec__sub{color:rgba(255,255,255,.85);}
+    .cta .btn--gold{margin-top:var(--s7);}
+
+    /* ---------- footer ---------- */
+    .footer{border-top:1px solid var(--border);padding:var(--s8) 0 var(--s7);}
+    .footer__grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:var(--s7);margin-bottom:var(--s8);}
+    .footer__col h4{font-family:var(--display);text-transform:uppercase;font-size:var(--fs4);letter-spacing:.04em;margin-bottom:var(--s4);}
+    .footer__col a{display:block;color:var(--muted);padding:var(--s2) 0;font-size:var(--fs3);}
+    .footer__col a:hover{color:var(--text);}
+    .footer__legal{display:flex;justify-content:space-between;gap:var(--s5);color:var(--muted);font-size:var(--fs2);flex-wrap:wrap;padding-top:var(--s5);border-top:1px solid var(--border);}
+
+    /* ---------- toast ---------- */
+    .toast{position:fixed;left:50%;bottom:var(--s7);transform:translateX(-50%);background:var(--text);color:var(--surface);padding:var(--s4) var(--s6);border-radius:var(--r2);box-shadow:var(--shadow-lg);font-weight:600;z-index:70;}
+    .toast[hidden]{display:none;}
+
+    /* ---------- responsive ---------- */
+    @media (max-width:1023px){
+      .hero__grid{grid-template-columns:1fr;}
+      .phone{margin:0 auto;}
+      .grid-3{grid-template-columns:1fr 1fr;}
+      .footer__grid{grid-template-columns:1fr 1fr;}
+      #menuToggle{display:inline-flex;}
+      .nav{position:absolute;top:var(--header-h);left:0;right:0;background:var(--surface);border-bottom:1px solid var(--border);flex-direction:column;padding:var(--s4);display:none;}
+      .nav.is-open{display:flex;}
+    }
+    @media (max-width:767px){
+      .grid-3{grid-template-columns:1fr;}
+      .sec__title{font-size:var(--fs6);}
+      .hero__title{font-size:var(--fs7);}
+      .footer__grid{grid-template-columns:1fr;}
+      .sec{padding:var(--s8) 0;}
+    }
+    @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important;}}
+  </style>
+</head>
+<body>
+  <div class="progress" aria-hidden="true"><div class="progress__bar" id="progressBar" style="width:0%"></div></div>
+
+  <!-- header -->
+  <header class="header">
+    <div class="wrap header__in">
+      <a class="logo" href="#top"><span class="logo__mark">P</span> Pulse</a>
+      <nav class="nav" id="nav">
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#stories">Stories</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <button class="iconbtn" id="themeToggle" aria-label="Toggle theme">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+      <button class="iconbtn" id="menuToggle" aria-label="Toggle navigation">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <a class="btn btn--primary btn--sm" href="#pricing" style="margin-left:var(--s2)">Get started</a>
+    </div>
+  </header>
+
+  <!-- hero -->
+  <section class="hero" id="top">
+    <div class="wrap hero__grid">
+      <div>
+        <span class="chip">⚡ 12-week program</span>
+        <h1 class="hero__title">Train harder.<br />Recover <em>smarter.</em></h1>
+        <p class="hero__sub">Pulse builds your plan around real recovery data — so every session counts and every rest day pays off.</p>
+        <div class="hero__cta">
+          <button class="btn btn--gold btn--lg" data-cta="Start free trial">Start free trial</button>
+          <button class="btn btn--ghost btn--lg" data-cta="Watch the demo">Watch the demo</button>
+        </div>
+        <div class="stats">
+          <div><div class="stat__num">120k+</div><div class="stat__label">Athletes</div></div>
+          <div><div class="stat__num">4.9★</div><div class="stat__label">Avg rating</div></div>
+          <div><div class="stat__num">9min</div><div class="stat__label">Daily habit</div></div>
+        </div>
+      </div>
+      <div class="hero__visual">
+        <div class="phone">
+          <div class="phone__bar"><span class="chip" style="font-size:var(--fs1)">RECOVERY 92%</span><span style="color:var(--muted);font-size:var(--fs2)">Week 6</span></div>
+          <div class="phone__ring"><span class="dot" style="background:var(--good)"></span><span class="phone__sm">Sleep quality — excellent</span></div>
+          <div class="phone__ring"><span class="dot" style="background:var(--gold)"></span><span class="phone__sm">Strain — moderate</span></div>
+          <div class="phone__big">Today: Lower A</div>
+          <div class="phone__sm">Squat 4×6 · RDL 3×8 · Core 10min</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- logos -->
+  <div class="logos"><div class="wrap logos__row">
+    <span>IronBase</span><span>FitGrid</span><span>PeakLab</span><span>Formwise</span><span>Strive</span>
+  </div></div>
+
+  <!-- features -->
+  <section class="sec" id="features">
+    <div class="wrap center">
+      <div class="sec__label">Why Pulse</div>
+      <h2 class="sec__title">Built for how bodies actually adapt</h2>
+      <p class="sec__sub">Stop guessing. Pulse turns recovery signals into a plan you can follow every single day.</p>
+    </div>
+    <div class="wrap grid-3" style="margin-top:var(--s8)">
+      <article class="feature">
+        <div class="feature__ico" style="background:var(--navy)">01</div>
+        <h3 class="feature__title">Recovery score</h3>
+        <p class="feature__text">A single number from sleep, HRV and strain — so you know exactly how hard to push.</p>
+      </article>
+      <article class="feature">
+        <div class="feature__ico" style="background:var(--blue)">02</div>
+        <h3 class="feature__title">Adaptive plans</h3>
+        <p class="feature__text">Your program reshapes itself nightly. Missed a day? Pulse re-routes the whole week.</p>
+      </article>
+      <article class="feature">
+        <div class="feature__ico" style="background:var(--gold)">03</div>
+        <h3 class="feature__title">Coach check-ins</h3>
+        <p class="feature__text">Real coaches review your trend lines and reply with voice notes that actually help.</p>
+      </article>
+      <article class="feature">
+        <div class="feature__ico" style="background:var(--danger)">04</div>
+        <h3 class="feature__title">Meal timing</h3>
+        <p class="feature__text">Macros synced to your training clock — fuel the work, not just the day.</p>
+      </article>
+      <article class="feature">
+        <div class="feature__ico" style="background:var(--good)">05</div>
+        <h3 class="feature__title">Wearable sync</h3>
+        <p class="feature__text">Works with Apple Health, Garmin, Whoop and Oura out of the box.</p>
+      </article>
+      <article class="feature">
+        <div class="feature__ico" style="background:var(--text-2)">06</div>
+        <h3 class="feature__title">Habit streaks</h3>
+        <p class="feature__text">Small wins, tracked gently. Streaks that survive a rest day — because they should.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- pricing -->
+  <section class="sec" id="pricing" style="background:var(--surface-2)">
+    <div class="wrap center">
+      <div class="sec__label">Pricing</div>
+      <h2 class="sec__title">Start free. Upgrade when it clicks.</h2>
+      <div class="toggle" id="priceToggle">
+        <button class="is-active" data-period="monthly">Monthly</button>
+        <button data-period="yearly">Yearly · 2 months free</button>
+      </div>
+      <div class="grid-3">
+        <article class="price-card">
+          <div class="price-card__name">Starter</div>
+          <div class="price-card__price">$0<span>/month</span></div>
+          <ul class="price-card__list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg> Recovery score + trends</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg> 3 workouts / week</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg> Community access</li>
+          </ul>
+          <button class="btn btn--ghost" data-cta="Choose Starter">Choose Starter</button>
+        </article>
+        <article class="price-card price-card--popular">
+          <span class="price-card__flag">Most popular</span>
+          <div class="price-card__name">Pro</div>
+          <div class="price-card__price" data-price-monthly="19" data-price-yearly="15">$19<span>/month</span></div>
+          <ul class="price-card__list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg> Adaptive plans</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg> Coach check-ins</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg> Wearable sync</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg> Meal timing</li>
+          </ul>
+          <button class="btn btn--primary" data-cta="Choose Pro">Choose Pro</button>
+        </article>
+        <article class="price-card">
+          <div class="price-card__name">Teams</div>
+          <div class="price-card__price" data-price-monthly="49" data-price-yearly="39">$49<span>/month</span></div>
+          <ul class="price-card__list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg> Everything in Pro</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg> Admin dashboard</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg> SSO + priority support</li>
+          </ul>
+          <button class="btn btn--ghost" data-cta="Contact sales">Contact sales</button>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- testimonials -->
+  <section class="sec" id="stories">
+    <div class="wrap center">
+      <div class="sec__label">Stories</div>
+      <h2 class="sec__title">Athletes who stopped guessing</h2>
+      <div class="carousel">
+        <div class="carousel__track" id="track">
+          <div class="tcard">
+            <div class="tcard__in">
+              <div class="stars">★★★★★</div>
+              <p class="tcard__quote">"I stopped overtraining for the first time in years. The recovery score is scary accurate."</p>
+              <div class="tcard__who">Dana K.</div>
+              <div class="tcard__role">Ultra runner · Boulder</div>
+            </div>
+          </div>
+          <div class="tcard">
+            <div class="tcard__in">
+              <div class="stars">★★★★★</div>
+              <p class="tcard__quote">"The adaptive plan is like having a coach who watches me sleep. Made it 12 weeks without a single skipped session."</p>
+              <div class="tcard__who">Marcus L.</div>
+              <div class="tcard__role">Powerlifter · Berlin</div>
+            </div>
+          </div>
+          <div class="tcard">
+            <div class="tcard__in">
+              <div class="stars">★★★★☆</div>
+              <p class="tcard__quote">"Meal timing alone was worth the upgrade. Fuel the work, not just the day — that line stuck with me."</p>
+              <div class="tcard__who">Priya S.</div>
+              <div class="tcard__role">CrossFitter · Toronto</div>
+            </div>
+          </div>
+        </div>
+        <div class="carousel__nav">
+          <button class="carousel__arrow" id="prev" aria-label="Previous"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></button>
+          <span class="carousel__dot is-active" data-i="0"></span>
+          <span class="carousel__dot" data-i="1"></span>
+          <span class="carousel__dot" data-i="2"></span>
+          <button class="carousel__arrow" id="next" aria-label="Next"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="sec" id="faq">
+    <div class="wrap center">
+      <div class="sec__label">FAQ</div>
+      <h2 class="sec__title">Quick answers</h2>
+      <div class="faq" style="margin-top:var(--s7)">
+        <div class="faq__item">
+          <button class="faq__q">Do I need a wearable? <svg class="faq__ico" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+          <div class="faq__a">No. Pulse works fully manual — you rate effort and sleep, and the model adapts from there. A wearable just sharpens the inputs.</div>
+        </div>
+        <div class="faq__item">
+          <button class="faq__q">Can I switch plans anytime? <svg class="faq__ico" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+          <div class="faq__a">Yes — upgrade, downgrade or pause from settings. Changes apply at the next billing cycle, no lock-in.</div>
+        </div>
+        <div class="faq__item">
+          <button class="faq__q">What if I skip a session? <svg class="faq__ico" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+          <div class="faq__a">Your plan re-routes automatically. Skipped sessions move, don't stack — recovery always wins.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="wrap" style="padding-bottom:var(--s9)">
+    <div class="cta">
+      <div class="sec__label" style="color:var(--gold-soft)">Ready when you are</div>
+      <h2 class="sec__title">Your first 12 weeks are on us.</h2>
+      <p class="sec__sub">Join 120,000 athletes training with data, not dogma.</p>
+      <button class="btn btn--gold btn--lg" data-cta="Join Pulse now">Join Pulse now</button>
+    </div>
+  </section>
+
+  <!-- footer -->
+  <footer class="footer">
+    <div class="wrap">
+      <div class="footer__grid">
+        <div>
+          <a class="logo" href="#top"><span class="logo__mark">P</span> Pulse</a>
+          <p class="sec__sub" style="margin-top:var(--s4)">Train harder. Recover smarter.</p>
+        </div>
+        <div class="footer__col"><h4>Product</h4><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="#stories">Stories</a></div>
+        <div class="footer__col"><h4>Company</h4><a href="#">About</a><a href="#">Careers</a><a href="#">Press</a></div>
+        <div class="footer__col"><h4>Legal</h4><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Security</a></div>
+      </div>
+      <div class="footer__legal"><span>© 2026 Pulse Fitness Inc.</span><span>Made for people who move.</span></div>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script>
+    (function () {
+      "use strict";
+      var $ = function (s, r) { return (r || document).querySelector(s); };
+      var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+      var root = document.documentElement;
+
+      // theme toggle (persist)
+      try { var t = localStorage.getItem("pulse-theme"); if (t) root.setAttribute("data-theme", t); } catch (e) {}
+      function setTheme(t) {
+        root.setAttribute("data-theme", t);
+        try { localStorage.setItem("pulse-theme", t); } catch (e) {}
+        $("#themeIcon").innerHTML = t === "dark"
+          ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'
+          : '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>';
+      }
+      setTheme(root.getAttribute("data-theme"));
+      $("#themeToggle").addEventListener("click", function () {
+        setTheme(root.getAttribute("data-theme") === "dark" ? "light" : "dark");
+      });
+
+      // mobile nav
+      $("#menuToggle").addEventListener("click", function () { $("#nav").classList.toggle("is-open"); });
+      $$("#nav a").forEach(function (a) { a.addEventListener("click", function () { $("#nav").classList.remove("is-open"); }); });
+
+      // pricing toggle
+      $("#priceToggle").addEventListener("click", function (e) {
+        var b = e.target.closest("button"); if (!b) return;
+        $$("#priceToggle button").forEach(function (x) { x.classList.remove("is-active"); });
+        b.classList.add("is-active");
+        $$(".price-card__price[data-price-monthly]").forEach(function (el) {
+          var v = b.dataset.period === "yearly" ? el.dataset.priceYearly : el.dataset.priceMonthly;
+          el.innerHTML = "$" + v + "<span>/month</span>";
+        });
+      });
+
+      // FAQ accordion
+      $$(".faq__item").forEach(function (item) {
+        item.querySelector(".faq__q").addEventListener("click", function () {
+          item.classList.toggle("is-open");
+        });
+      });
+
+      // testimonials carousel
+      var track = $("#track"), cards = $$(".tcard"), dots = $$(".carousel__dot"), idx = 0;
+      function go(i) {
+        idx = (i + cards.length) % cards.length;
+        track.style.transform = "translateX(-" + (idx * 100) + "%)";
+        dots.forEach(function (d, di) { d.classList.toggle("is-active", di === idx); });
+      }
+      $("#prev").addEventListener("click", function () { go(idx - 1); });
+      $("#next").addEventListener("click", function () { go(idx + 1); });
+      dots.forEach(function (d) { d.addEventListener("click", function () { go(+d.dataset.i); }); });
+
+      // scroll progress
+      window.addEventListener("scroll", function () {
+        var h = document.documentElement;
+        var pct = h.scrollTop / (h.scrollHeight - h.clientHeight) * 100;
+        $("#progressBar").style.width = pct + "%";
+      }, { passive: true });
+
+      // CTA toast
+      $$("[data-cta]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var toast = $("#toast");
+          toast.textContent = b.dataset.cta + " — this prototype shows the flow.";
+          toast.hidden = false;
+          setTimeout(function () { toast.hidden = true; }, 2600);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

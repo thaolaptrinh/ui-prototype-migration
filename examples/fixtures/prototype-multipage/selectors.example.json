@@ -1,0 +1,4 @@
+{
+  "home": [".header", ".logo", ".nav", ".nav a.is-active", ".hero", ".hero__title", ".hero__eyebrow", ".hero__cta", ".btn--brand", ".btn--ghost", ".badge", ".card", ".feat", ".feat__num", ".footer"],
+  "pricing": [".header", ".logo", ".nav", ".nav a.is-active", ".page-head", ".page-head__title", ".badge", ".plans", ".plan", ".plan--feat", ".plan__price", ".plan__list", ".btn--brand", ".btn--ghost", ".footer"]
+}

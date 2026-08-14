@@ -1,0 +1,37 @@
+{
+  "name": "ui-prototype-migration",
+  "version": "1.0.0",
+  "description": "Claude Code / Codex skill: migrate an existing HTML/CSS UI prototype into a component-based frontend (Vue 3 first) with mandatory visual-fidelity verification.",
+  "license": "MIT",
+  "type": "module",
+  "keywords": [
+    "claude-code",
+    "codex",
+    "agent-skill",
+    "ui-migration",
+    "vue",
+    "visual-regression",
+    "playwright"
+  ],
+  "files": [
+    "skills/**",
+    "commands/**",
+    ".claude-plugin/**",
+    ".codex-plugin/**",
+    ".agents/**",
+    "scripts/**",
+    "examples/**",
+    "README.md",
+    "CONTRIBUTING.md"
+  ],
+  "scripts": {
+    "compare": "node scripts/compare-visuals.mjs",
+    "verify:parity": "node scripts/verify-parity.mjs"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "pixelmatch": "^7.2.0",
+    "playwright": "^1.62.0",
+    "pngjs": "^7.0.0"
+  }
+}

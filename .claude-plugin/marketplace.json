@@ -1,0 +1,16 @@
+{
+  "name": "ui-prototype-migration",
+  "metadata": {
+    "description": "Migrate an existing HTML/CSS UI prototype into a component-based frontend (Vue 3 first) with visual-fidelity verification — preserve, don't redesign."
+  },
+  "owner": {
+    "name": "thaolaptrinh",
+    "url": "https://github.com/thaolaptrinh"
+  },
+  "plugins": [
+    {
+      "name": "ui-prototype-migration",
+      "source": "./"
+    }
+  ]
+}

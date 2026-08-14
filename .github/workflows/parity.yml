@@ -1,0 +1,75 @@
+name: parity
+
+# Runs the unified visual-fidelity gate (scripts/verify-parity.mjs) for a
+# prototype ↔ migrated-target pair. Adapt the matrix inputs to your app.
+#
+# Usage: set PROTOTYPE_URL/TARGET_URL to your running previews, or wire this
+# into a job that builds the target first (see build step commented below).
+
+on:
+  workflow_dispatch:
+    inputs:
+      prototype_url:
+        description: "Prototype URL (source of truth)"
+        required: true
+        default: "http://127.0.0.1:5187"
+      target_url:
+        description: "Migrated target URL"
+        required: true
+        default: "http://127.0.0.1:5190"
+      selectors:
+        description: "Selector JSON path (repo-relative)"
+        required: true
+        default: "examples/fixtures/prototype-landing/selectors.example.json"
+      theme_key:
+        description: "localStorage key for theme (empty = single theme)"
+        required: false
+        default: "pulse-theme"
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Serve prototype (static fixture)
+        run: python3 -m http.server 5187 --directory examples/fixtures/prototype-landing &
+        shell: bash
+
+      # The target app lives in your own repo, not here. Build-and-serve it in
+      # a job/step of your own (see the commented example below), then hand its
+      # URL to `inputs.target_url`. If it is built in this repo, uncomment and
+      # adapt:
+      # - name: Build target
+      #   run: cd <your-target-dir> && npm ci && npm run build
+      # - name: Serve target
+      #   run: python3 -m http.server 5190 --directory <your-target-dir>/dist &
+      #   shell: bash
+
+      - name: Verify parity
+        run: |
+          node scripts/verify-parity.mjs \
+            --prototype "${{ inputs.prototype_url }}" \
+            --target "${{ inputs.target_url }}" \
+            --selectors "${{ inputs.selectors }}" \
+            --themes light,dark --viewports 1440,1024,768 \
+            $([ -n "${{ inputs.theme_key }}" ] && echo "--theme-key ${{ inputs.theme_key }}") \
+            --axe --out ./compare-report
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compare-report
+          path: compare-report
