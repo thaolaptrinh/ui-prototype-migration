@@ -218,6 +218,17 @@ Compare **per view**:
 3. Repeat for every view + the login/auth gate + each theme (light/dark) + each
    interaction state.
 
+`scripts/verify-parity.mjs` automates the loop: with a `{view: [...]}` selector
+map and a `{view}` placeholder in both URLs it navigates both apps per view and
+produces ONE combined report across all views × themes × viewports:
+
+```bash
+node scripts/verify-parity.mjs \
+  --prototype "http://host/#/{view}" --target "http://app/#/{view}" \
+  --selectors selectors.json --views dashboard,users,settings \
+  --themes light,dark --viewports 1440,768
+```
+
 `scripts/compare-visuals.mjs` compares one URL pair at a time — run it once per
 (view × theme) by passing the route hash in the URL
 (`--prototype http://…/#/users`), with a selector list scoped to that view.
@@ -278,9 +289,11 @@ selector/style list. For a **repeatable, CI-grade** pipeline, prefer Playwright
 script — see [Pixel diff done right](#pixel-diff-done-right-baseline-thresholds-flake-hygiene)
 and [Accessibility: no new violations](#accessibility-no-new-violations-vs-the-prototype).
 
-**Scope note:** `compare-visuals.mjs` compares the **resting** state only. It
-does not drive interactions. To verify hover/focus/open/selected states, write
-small Playwright snippets that perform the action (`.click()`, `.hover()`,
+**Scope note:** `compare-visuals.mjs` compares the **resting** state only.
+`verify-parity.mjs --states hover,focus` additionally diffs computed styles
+with hover/focus applied on both pages (states an element can't take are
+skipped, not failed). For open/selected/click-triggered states beyond those,
+write small Playwright snippets that perform the action (`.click()`, `.hover()`,
 keyboard) and then re-run the same `getComputedStyle` / `boundingBox` checks or
 re-screenshot — see [Interaction & state checks](#interaction--state-checks).
 

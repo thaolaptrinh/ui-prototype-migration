@@ -20,8 +20,10 @@ Full argument string: `$ARGUMENTS`
 - `--target <url>` — running URL of the MIGRATED app. Required.
 - `--selectors <file>` — JSON array of selectors that should match on both pages (default: derive from the prototype, or use `examples/fixtures/prototype-dashboard/selectors.example.json`).
 - `--viewports 1440,1024,768` — viewport widths in px (use the prototype's own breakpoints).
+- `--views home,pricing` — for a multi-page prototype with a `{view:[...]} selector map`: navigate both apps per view by putting `{view}` in the URLs (`--prototype http://host/{view}.html`) and get ONE combined report across all views.
+- `--states hover,focus` — also diff computed styles with each state applied on both pages (resting state is always checked). States a selector can't take (e.g. hover on a non-hoverable element) are skipped, not failed.
 
-Both apps must already be running.
+Both apps must already be running (the script probes both URLs first and fails fast with a clear message).
 
 ## Required behaviour
 

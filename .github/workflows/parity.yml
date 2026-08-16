@@ -36,8 +36,40 @@ on:
 
 jobs:
   # ---- regression test for the verifier itself -------------------------------
+  # Each fixture is served on two ports and verified against itself; the gate
+  # MUST report PARITY OK. The multipage fixture also exercises the per-view
+  # ({view} URL template) code path.
   self-test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - fixture: prototype-landing
+            serve-dir: examples/fixtures/prototype-landing
+            prototype: http://127.0.0.1:5187
+            target: http://127.0.0.1:5190
+            views: ""
+            theme-key: pulse-theme
+          - fixture: prototype-dashboard
+            serve-dir: examples/fixtures/prototype-dashboard
+            prototype: http://127.0.0.1:5187
+            target: http://127.0.0.1:5190
+            views: ""
+            theme-key: acme-theme
+          - fixture: prototype-multipage
+            serve-dir: examples/fixtures/prototype-multipage
+            prototype: "http://127.0.0.1:5187/{view}.html"
+            target: "http://127.0.0.1:5190/{view}.html"
+            views: "--views home,pricing"
+            theme-key: verdant-theme
+    env:
+      FIXTURE: ${{ matrix.fixture }}
+      SERVE_DIR: ${{ matrix.serve-dir }}
+      PROTOTYPE: ${{ matrix.prototype }}
+      TARGET: ${{ matrix.target }}
+      VIEWS: ${{ matrix.views }}
+      THEME_KEY: ${{ matrix.theme-key }}
     steps:
       - uses: actions/checkout@v4
 
@@ -49,13 +81,19 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
       - name: Playwright browsers
         run: npx playwright install --with-deps chromium
 
       - name: Serve fixture on two ports
         run: |
-          python3 -m http.server 5187 --directory examples/fixtures/prototype-landing &
-          python3 -m http.server 5190 --directory examples/fixtures/prototype-landing &
+          python3 -m http.server 5187 --directory "$SERVE_DIR" &
+          python3 -m http.server 5190 --directory "$SERVE_DIR" &
         shell: bash
 
       - name: Wait for servers
@@ -68,16 +106,17 @@ jobs:
       - name: Verify parity (fixture vs itself — must be PARITY OK)
         run: |
           node scripts/verify-parity.mjs \
-            --prototype http://127.0.0.1:5187 --target http://127.0.0.1:5190 \
-            --selectors examples/fixtures/prototype-landing/selectors.example.json \
-            --themes light,dark --viewports 1440,1024,768 --theme-key pulse-theme \
+            --prototype "$PROTOTYPE" --target "$TARGET" \
+            --selectors "examples/fixtures/$FIXTURE/selectors.example.json" \
+            $VIEWS \
+            --themes light,dark --viewports 1440,1024,768 --theme-key "$THEME_KEY" \
             --axe --out ./compare-report
 
       - name: Upload report artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: self-test-report
+          name: self-test-report-${{ matrix.fixture }}
           path: compare-report
 
   # ---- manual gate against your own app ---------------------------------------

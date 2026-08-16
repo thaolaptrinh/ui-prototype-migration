@@ -28,6 +28,8 @@ Migrate examples/fixtures/prototype-dashboard into a Vue 3 app and prove it matc
 
 Or use the commands directly: `/migrate-prototype <path>`, then `/verify-parity` as the gate.
 
+CI runs the verifier against itself on every push/PR (each fixture vs itself, including the multi-page per-view path) — see [`.github/workflows/parity.yml`](.github/workflows/parity.yml).
+
 ## Workflow
 
 `Inspect → Inventory → Port 1:1 → Verify (diff) → Iterate to 0 diffs → Refactor (after parity)`
@@ -58,7 +60,7 @@ Designing new UI from a spec/screenshot, Figma-to-code, or "make this UI better"
 
 - [`skills/ui-prototype-migration/`](skills/ui-prototype-migration/) — `SKILL.md` + `references/` (css-preservation, componentization, visual-verification, framework/vue).
 - [`commands/`](commands/) — `migrate-prototype.md`, `verify-parity.md` (logic lives in the skill).
-- [`scripts/`](scripts/) — `verify-parity.mjs` (unified Phase-4 gate: computed-style + bbox + pixel + axe, per view × theme × viewport) and `compare-visuals.mjs` (legacy resting-state subset).
+- [`scripts/`](scripts/) — `verify-parity.mjs` (unified Phase-4 gate: computed-style + bbox + pixel + axe, per view × theme × viewport, with optional interactive-state checks via `--states hover,focus`, multi-page `{view}` URL templates, and a single-file `report.html` for the iterate loop) and `compare-visuals.mjs` (legacy resting-state subset).
 - [`examples/fixtures/`](examples/fixtures/) — sample prototypes to practice on (admin dashboard, marketing landing, multi-page).
 - `.claude-plugin/` + `.codex-plugin/` — plugin manifests for Claude Code and Codex.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — validation gates, version discipline, PR conventions.
