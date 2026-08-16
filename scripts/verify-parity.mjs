@@ -142,9 +142,19 @@ async function pixelDiff(pageP, pageT, path) {
   const bufP = await pageP.screenshot({ fullPage: true });
   const bufT = await pageT.screenshot({ fullPage: true });
   const a = PNG.sync.read(bufP), b = PNG.sync.read(bufT);
-  const w = Math.min(a.width, b.width), h = Math.min(a.height, b.height);
+  // Different full-page heights are a REAL diff (layout mismatch), not a crash:
+  // normalize both onto a shared canvas of max size; the uncovered area of the
+  // shorter page renders as transparent and counts as differing pixels.
+  const w = Math.max(a.width, b.width), h = Math.max(a.height, b.height);
+  const norm = (src) => {
+    if (src.width === w && src.height === h) return src;
+    const c = new PNG({ width: w, height: h });
+    PNG.bitblt(src, c, 0, 0, src.width, src.height, 0, 0);
+    return c;
+  };
+  const A = norm(a), B = norm(b);
   const diff = new PNG({ width: w, height: h });
-  const n = pixelmatch(a.data, b.data, diff.data, w, h, { threshold: PIXEL_THRESHOLD });
+  const n = pixelmatch(A.data, B.data, diff.data, w, h, { threshold: PIXEL_THRESHOLD });
   writeFileSync(path + ".png", PNG.sync.write(diff));
   return { width: w, height: h, diffPixels: n, ratio: n / (w * h) };
 }
@@ -217,10 +227,15 @@ async function main() {
         if (diffs.length) failures++;
       }
 
-      // pixel (alarm)
-      const pix = await pixelDiff(pageP, pageT, `${o.out}/diff-${theme}-${vw}`);
-      entry.pixel = { ratio: pix.ratio, diffPixels: pix.diffPixels };
-      if (pix.ratio > PIXEL_RATIO_CAP) { failures++; entry.pixel.fail = true; }
+      // pixel (alarm) — an error here is a failure, not a dead report
+      try {
+        const pix = await pixelDiff(pageP, pageT, `${o.out}/diff-${theme}-${vw}`);
+        entry.pixel = { ratio: pix.ratio, diffPixels: pix.diffPixels };
+        if (pix.ratio > PIXEL_RATIO_CAP) { failures++; entry.pixel.fail = true; }
+      } catch (e) {
+        entry.pixel = { error: e.message, fail: true };
+        failures++;
+      }
 
       results.push(entry);
       await context.close();
@@ -247,7 +262,8 @@ async function main() {
   console.log(`\n=== verify-parity report → ${reportPath} ===`);
   for (const r of results) {
     const diffs = r.selectors.filter((s) => s.status === "DIFF" || s.status.startsWith("missing"));
-    console.log(`[${r.theme} @ ${r.viewport}px] pixel=${r.pixel.ratio.toExponential(2)} selectors ${r.selectors.length - diffs.length}/${r.selectors.length} match${r.pixel.fail ? "  PIXEL FAIL" : ""}`);
+    const pixStr = r.pixel.error ? `error: ${r.pixel.error}` : r.pixel.ratio.toExponential(2);
+    console.log(`[${r.theme} @ ${r.viewport}px] pixel=${pixStr} selectors ${r.selectors.length - diffs.length}/${r.selectors.length} match${r.pixel.fail ? "  PIXEL FAIL" : ""}`);
     for (const d of diffs.slice(0, 10)) {
       console.log(`  ${d.sel}: ${d.status}${d.diffs ? " — " + d.diffs.map((x) => `${x.k}: ${x.proto}→${x.target}`).join("; ") : ""}`);
     }

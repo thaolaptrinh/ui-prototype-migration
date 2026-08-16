@@ -280,9 +280,10 @@ async function main() {
 
   printSummary(report, reportPath);
 
-  // Exit non-zero if any non-match selector remains, so this can gate CI/loops.
+  // Exit non-zero if any selector is not an exact match (diffs OR missing on
+  // either side — a missing element is at least as bad as a drifted one).
   const hasDiffs = report.viewports.some((vp) =>
-    vp.selectors.some((s) => s.status === "ok")
+    vp.selectors.some((s) => s.status !== "match")
   );
   exit(hasDiffs ? 1 : 0);
 }

@@ -1,12 +1,20 @@
 name: parity
 
-# Runs the unified visual-fidelity gate (scripts/verify-parity.mjs) for a
-# prototype ↔ migrated-target pair. Adapt the matrix inputs to your app.
+# Two jobs:
 #
-# Usage: set PROTOTYPE_URL/TARGET_URL to your running previews, or wire this
-# into a job that builds the target first (see build step commented below).
+# 1. self-test (runs on every push/PR): serves one fixture on two ports and
+#    verifies it against itself. The gate MUST report PARITY OK — this is the
+#    regression test for the verifier itself.
+#
+# 2. parity (manual): runs the unified visual-fidelity gate
+#    (scripts/verify-parity.mjs) for a prototype ↔ migrated-target pair.
+#    Set PROTOTYPE_URL/TARGET_URL to your running previews, or wire this into
+#    a job that builds the target first (see commented steps).
 
 on:
+  push:
+    branches: [main]
+  pull_request:
   workflow_dispatch:
     inputs:
       prototype_url:
@@ -27,8 +35,60 @@ on:
         default: "pulse-theme"
 
 jobs:
-  parity:
+  # ---- regression test for the verifier itself -------------------------------
+  self-test:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Serve fixture on two ports
+        run: |
+          python3 -m http.server 5187 --directory examples/fixtures/prototype-landing &
+          python3 -m http.server 5190 --directory examples/fixtures/prototype-landing &
+        shell: bash
+
+      - name: Wait for servers
+        run: |
+          for port in 5187 5190; do
+            curl --retry 10 --retry-delay 1 --retry-connrefused -s -o /dev/null "http://127.0.0.1:${port}/" \
+              || { echo "server on :${port} never became ready"; exit 1; }
+          done
+
+      - name: Verify parity (fixture vs itself — must be PARITY OK)
+        run: |
+          node scripts/verify-parity.mjs \
+            --prototype http://127.0.0.1:5187 --target http://127.0.0.1:5190 \
+            --selectors examples/fixtures/prototype-landing/selectors.example.json \
+            --themes light,dark --viewports 1440,1024,768 --theme-key pulse-theme \
+            --axe --out ./compare-report
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: self-test-report
+          path: compare-report
+
+  # ---- manual gate against your own app ---------------------------------------
+  parity:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      PROTOTYPE_URL: ${{ inputs.prototype_url }}
+      TARGET_URL: ${{ inputs.target_url }}
+      SELECTORS: ${{ inputs.selectors }}
+      THEME_KEY: ${{ inputs.theme_key }}
     steps:
       - uses: actions/checkout@v4
 
@@ -57,14 +117,19 @@ jobs:
       #   run: python3 -m http.server 5190 --directory <your-target-dir>/dist &
       #   shell: bash
 
+      - name: Wait for server
+        run: |
+          curl --retry 10 --retry-delay 1 --retry-connrefused -s -o /dev/null "${PROTOTYPE_URL}/" \
+            || { echo "prototype server never became ready"; exit 1; }
+
       - name: Verify parity
         run: |
           node scripts/verify-parity.mjs \
-            --prototype "${{ inputs.prototype_url }}" \
-            --target "${{ inputs.target_url }}" \
-            --selectors "${{ inputs.selectors }}" \
+            --prototype "${PROTOTYPE_URL}" \
+            --target "${TARGET_URL}" \
+            --selectors "${SELECTORS}" \
             --themes light,dark --viewports 1440,1024,768 \
-            $([ -n "${{ inputs.theme_key }}" ] && echo "--theme-key ${{ inputs.theme_key }}") \
+            $([ -n "${THEME_KEY}" ] && echo "--theme-key ${THEME_KEY}") \
             --axe --out ./compare-report
 
       - name: Upload report artifact
